@@ -28,11 +28,12 @@ def main():
 
     x_axis = samplers
     y_axis = steps
-    divs = [None, (10, (0, 0, 0))]
+    divs = [None, (APP_DEFAULTS['header_div_size'], APP_DEFAULTS['header_div_color'])]
+
     tiler = Tiler(
-        row_heights=[APP_DEFAULTS["header_size"]]
+        row_heights=[APP_DEFAULTS["header_cell_size"]]
         + [height + APP_DEFAULTS["padding"]] * len(y_axis),
-        col_widths=[APP_DEFAULTS["header_size"]]
+        col_widths=[APP_DEFAULTS["header_cell_size"]]
         + [width + APP_DEFAULTS["padding"]] * len(x_axis),
         row_divs=divs,
         col_divs=divs,

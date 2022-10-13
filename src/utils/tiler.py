@@ -4,6 +4,8 @@ import PIL.Image
 from PIL import ImageDraw, ImageFont
 from PIL.Image import Image
 
+from utils.config import APP_DEFAULTS
+
 Color = tuple[int, int, int]
 Size = float
 
@@ -66,7 +68,7 @@ class Tiler:
         self.img.paste(im, box=pos)
 
     def paste_text(
-        self, text: str, row: int, col: int, color=(0, 0, 0), size=40
+        self, text: str, row: int, col: int, color=(0, 0, 0), size=APP_DEFAULTS['header_font_size']
     ) -> None:
         text = str(text)
 
@@ -116,6 +118,6 @@ class Tiler:
 
         return (pos_x, pos_y)
 
-    def _get_cell_size(self, row: int, col: int) -> None:
+    def _get_cell_size(self, row: int, col: int) -> tuple[float, float]:
         "Get size (width, height) of cell at index (row, col)"
         return (self.col_widths[row], self.row_heights[col])
