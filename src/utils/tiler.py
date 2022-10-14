@@ -54,8 +54,8 @@ class Tiler:
         # Check im size
         im_sz = im.size
         sz = self._get_cell_size(row, col)
-        assert im_sz[0] <= sz[0]
-        assert im_sz[1] <= sz[1]
+        assert im_sz[0] <= sz[0], f'Image size ({im_sz}) is larger than cell size ({sz})'
+        assert im_sz[1] <= sz[1], f'Image size ({im_sz}) is larger than cell size ({sz})'
 
         # Center image
         padding_horiz = (sz[0] - im_sz[0]) // 2
