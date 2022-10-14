@@ -1,4 +1,3 @@
-
 import base64
 from dataclasses import dataclass, field
 from io import BytesIO
@@ -74,6 +73,8 @@ class Request:
 
     @property
     def payload(self):
+        self.validate()
+
         return dict(
             fn_index=self.fn_index,
             session_hash=self.session_hash,
@@ -104,7 +105,7 @@ class Request:
             ],
         )
 
-    def predict(self) -> Image:
+    def execute(self) -> Image:
         # Generate image
         response = requests.post(SD_URL + "/api/predict", json=self.payload)
         response = response.json()
@@ -114,3 +115,23 @@ class Request:
         im_bytes = BytesIO(base64.b64decode(im_b64))
         im = PIL.Image.open(im_bytes)
         return im
+
+    def validate(self) -> None:
+        assert self.sampler in [
+            "Euler a",
+            "Euler",
+            "LMS",
+            "Heun",
+            "DPM2",
+            "DPM2 a",
+            "DPM fast",
+            "DPM adaptive",
+            "LMS Karras",
+            "DPM2 Karras",
+            "DPM2 a Karras",
+            "DDIM",
+            "PLMS",
+        ], f'Invalid sampler: {self.sampler}'
+
+    def __post_init__(self):
+        self.validate()
