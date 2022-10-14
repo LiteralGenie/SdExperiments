@@ -49,11 +49,11 @@ class Request:
     extras: bool = False
     height: int = 512
     width: int = 512
+    highres_fix = False,
+    scale_latent = False
+    denoising_strength = 0.7
     _rest: list = field(
         default_factory=lambda: [
-            False,
-            False,
-            0.7,
             "None",
             False,
             False,
@@ -97,6 +97,9 @@ class Request:
                 self.extras,
                 self.height,
                 self.width,
+                self.highres_fix,
+                self.scale_latent,
+                self.denoising_strength,
                 *self._rest,
             ],
         )

@@ -9,8 +9,6 @@ APP_DEFAULTS = dict(
     # Size of cells for row title / col title
     header_font_size = 40,
 
-
-
     # Space around each image
     padding = 30,
 
