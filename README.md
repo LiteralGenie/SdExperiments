@@ -12,3 +12,8 @@
 
 The resulting image will be located in `outputs/` and will be updated as the script is running.
 <img width="80%" src="https://raw.githubusercontent.com/LiteralGenie/SdExperiments/master/.readme/grid.png" alt="sampler vs steps">
+
+
+## TODO
+
+- Make tiler easier to init. It's kinda ugly atm with the `APP_DEFAULTS` stuff.
