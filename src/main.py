@@ -5,6 +5,7 @@ from typing import Any, Callable, Literal
 
 from utils.cell import Cell, ImageCell, TextCell
 from utils.config import APP_DEFAULTS
+from utils.misc import line_break_soft
 from utils.paths import OUTPUT_DIR
 from utils.request import Request
 from utils.tiler import Tiler
@@ -60,8 +61,38 @@ Examples of things you can copy-paste under x_axis and y_axis:
     ),
     (
         "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
-        "cropped, lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, artist name, clothes, pale skin, furry, shiny, teeth, face, looking at viewer"
+        "signature, watermark, username, blurry, artist name, clothes"
     ),
+    (
+        "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
+        "worst quality, low quality, normal quality, jpeg artifacts"
+    ),
+    (
+        "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
+        "cropped, lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, artist name, clothes, pale skin, furry, shiny, teeth, face, looking at viewer"
+    ),
+]
+
+'prompt_positive_partial',
+[
+    "detailed",
+    "((detailed))",
+    "masterpiece",
+    "((masterpiece))",
+    "intricate",
+    "((intricate))",
+]
+
+'prompt_negative',
+[
+    "normal quality",
+    "((normal quality))",
+    "low quality",
+    "((low quality))",
+    "worst quality",
+    "((worst quality))",
+    "jpeg artifacts",
+    "((jpeg artifacts))",
 ]
 
 """
@@ -69,41 +100,32 @@ Examples of things you can copy-paste under x_axis and y_axis:
 
 def main():
     x_axis = [
-        'cfg',
-        [1, 5, 10, 15]
-    ]
-
-    y_axis = [
-        'prompt_full',
-        [   
-            (
-                "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
-                ""
-            ),
-            (
-                "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
-                "cropped, lowres, bad anatomy, bad hands,"
-            ),
-            (
-                "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
-                "text, error, missing fingers, extra digit, fewer digits"
-            ),
-            (
-                "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
-                "signature, watermark, username, blurry, artist name, clothes"
-            ),
-            (
-                "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
-                "worst quality, low quality, normal quality, jpeg artifacts"
-            ),
-            (
-                "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
-                "cropped, lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, artist name, clothes, pale skin, furry, shiny, teeth, face, looking at viewer"
-            ),
+        'prompt_positive_partial',
+        [
+            "detailed",
+            "((detailed))",
+            "masterpiece",
+            "((masterpiece))",
+            "intricate",
+            "((intricate))",
         ]
     ]
 
-    prompt = "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((smiling)), excited, in love, lovestruck, city, portrait"
+    y_axis = [
+        'prompt_negative',
+        [
+            "normal quality",
+            "((normal quality))",
+            "low quality",
+            "((low quality))",
+            "worst quality",
+            "((worst quality))",
+            "jpeg artifacts",
+            "((jpeg artifacts))",
+        ]
+    ]
+
+    prompt = "girl, black hair, ((brown streaks)), white parka, (ripped jeans), standing outside, (smiling), city, portrait"
     prompt_negative = "cropped, lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, artist name, clothes, pale skin, furry, shiny, teeth, face, looking at viewer"
     steps = 40
     seed = 1234567890
@@ -176,7 +198,7 @@ def get_modifier(axis_type: str) -> tuple[Callable[[Request, Any], Request], Cal
     """
 
     axis_type = axis_type.lower()
-    VALUE_TYPES = ['sampler', 'steps', 'cfg', 'resolution', 'prompt_full']
+    VALUE_TYPES = ['sampler', 'steps', 'cfg', 'resolution', 'prompt_full', 'prompt_positive', 'prompt_negative', 'prompt_positive_partial', 'prompt_negative_partial']
     assert axis_type in VALUE_TYPES, f'Invalid axis type: {axis_type}. Must be one of [{", ".join(VALUE_TYPES)}]'
 
     if axis_type == 'sampler':
@@ -206,29 +228,42 @@ def get_modifier(axis_type: str) -> tuple[Callable[[Request, Any], Request], Cal
             return request
     elif axis_type == 'prompt_full':
         def stringify(lst: tuple[str, str]) -> str:
-            def line_break(text: str, width=10) -> str:
-                text = text.strip()
-                if not text:
-                    return ''
-
-                split = text.split()
-                lines = [split[0]]
-
-                for word in split[1:]:
-                    if len(lines[-1]) > width:
-                        lines.append(word)
-                    else:
-                        lines[-1] += " " + word
-                return "\n".join(lines)
-
             prompt, prompt_negative = lst
-            prompt = line_break(prompt)
-            prompt_negative = line_break(prompt_negative)
+            prompt = line_break_soft(prompt)
+            prompt_negative = line_break_soft(prompt_negative)
             div = '\n--------\n'
             return f"POSITIVE{div}{prompt}\n\nNEGATIVE{div}{prompt_negative}\n--------------------"
         def modifier(request: Request, lst: tuple[str, str]) -> Request:
             request.prompt = lst[0]
             request.prompt_negative = lst[1]
+            return request
+    elif axis_type == 'prompt_positive':
+        def stringify(prompt: str) -> str:
+            prompt = line_break_soft(prompt)
+            return f"POSITIVE\n{prompt}"
+        def modifier(request: Request, prompt: str) -> Request:
+            request.prompt = prompt
+            return request
+    elif axis_type == 'prompt_negative':
+        def stringify(prompt_negative: str) -> str:
+            prompt_negative = line_break_soft(prompt_negative)
+            return f"NEGATIVE\n{prompt_negative}"
+        def modifier(request: Request, prompt_negative: str) -> Request:
+            request.prompt_negative = prompt_negative
+            return request
+    elif axis_type == 'prompt_positive_partial':
+        def stringify(prompt: str) -> str:
+            prompt = line_break_soft(prompt)
+            return f"POSITIVE\n{prompt}"
+        def modifier(request: Request, prompt: str) -> Request:
+            request.prompt = prompt.strip() + ", " + request.prompt.strip()
+            return request
+    elif axis_type == 'prompt_negative_partial':
+        def stringify(prompt_negative: str) -> str:
+            prompt_negative = line_break_soft(prompt_negative)
+            return f"NEGATIVE\n{prompt_negative}"
+        def modifier(request: Request, prompt_negative: str) -> Request:
+            request.prompt_negative = prompt_negative.strip() + ", "  + request.prompt_negative.strip()
             return request
 
     return modifier, stringify
