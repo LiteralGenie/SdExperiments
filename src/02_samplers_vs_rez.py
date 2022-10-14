@@ -33,7 +33,7 @@ def main():
         row_heights=[APP_DEFAULTS["header_cell_size"]]
         + [rez[1] + APP_DEFAULTS["padding"] for rez in resolutions],
         col_widths=[APP_DEFAULTS["header_cell_size"] * 3]
-        + [max(rez[0] for rez in resolutions) + APP_DEFAULTS["padding"]] * len(resolutions),
+        + [max(rez[0] for rez in resolutions) + APP_DEFAULTS["padding"]] * len(x_axis),
         row_divs=divs,
         col_divs=divs,
     )
@@ -47,8 +47,8 @@ def main():
         tiler.paste_text(title, i + 1, 0)
 
     # Images
-    for i, smplr in enumerate(x_axis):
-        for j, rez in enumerate(y_axis):
+    for i, smplr in enumerate(samplers):
+        for j, rez in enumerate(resolutions):
             im = Request(
                 sampler=smplr,
                 steps=steps,
