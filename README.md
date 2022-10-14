@@ -18,5 +18,5 @@ The resulting image will be located in `outputs/` and will be updated as the scr
 
 - [x] Make Ttiler easier to init. It's kinda ugly with the `APP_DEFAULTS` stuff.
 - [ ] Allow resuming of runs
-- [ ] Prompt axis
+- [x] Prompt axis
 - [ ] Axis for "high-resolution fix"

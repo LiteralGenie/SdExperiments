@@ -1,3 +1,5 @@
+import copy
+from ctypes.wintypes import WORD
 import time
 from typing import Any, Callable, Literal
 
@@ -19,13 +21,13 @@ Examples of things you can copy-paste under x_axis and y_axis:
     "Euler a",
     "Euler",
     "LMS",
-    "Heun",
+    # "Heun",
     "DPM2",
     # "DPM2 a",
     # "DPM fast",
     # "DPM adaptive",
     # "LMS Karras",
-    # "DPM2 Karras",
+    "DPM2 Karras",
     # "DPM2 a Karras",
     # "DDIM",
     # "PLMS",
@@ -46,36 +48,64 @@ Examples of things you can copy-paste under x_axis and y_axis:
     (2048, 768)
 ]
 
+'prompt_full',
+[   
+    (
+        "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
+        ""
+    ),
+    (
+        "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
+        "cropped, lowres, bad anatomy, bad hands,"
+    ),
+    (
+        "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
+        "cropped, lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, artist name, clothes, pale skin, furry, shiny, teeth, face, looking at viewer"
+    ),
+]
+
 """
 
 
 def main():
     x_axis = [
-        'sampler',
-        [
-            "Euler a",
-            "Euler",
-            "LMS",
-            "Heun",
-            "DPM2",
-            # "DPM2 a",
-            # "DPM fast",
-            # "DPM adaptive",
-            # "LMS Karras",
-            # "DPM2 Karras",
-            # "DPM2 a Karras",
-            # "DDIM",
-            # "PLMS",
-        ]
+        'cfg',
+        [1, 5, 10, 15]
     ]
 
     y_axis = [
-        'steps',
-        [5, 20, 40]
+        'prompt_full',
+        [   
+            (
+                "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
+                ""
+            ),
+            (
+                "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
+                "cropped, lowres, bad anatomy, bad hands,"
+            ),
+            (
+                "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
+                "text, error, missing fingers, extra digit, fewer digits"
+            ),
+            (
+                "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
+                "signature, watermark, username, blurry, artist name, clothes"
+            ),
+            (
+                "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
+                "worst quality, low quality, normal quality, jpeg artifacts"
+            ),
+            (
+                "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((happy)), excited, in love, lovestruck, city, portrait",
+                "cropped, lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, artist name, clothes, pale skin, furry, shiny, teeth, face, looking at viewer"
+            ),
+        ]
     ]
 
     prompt = "masterpiece, best quality, girl, black hair, (brown streaks), (white parka), (ripped jeans), standing, outside, ((smiling)), excited, in love, lovestruck, city, portrait"
-    prompt_negative = "cropped, lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, artist name, clothes, pale skin, furry, nipples, shiny, teeth, face, looking at viewer"
+    prompt_negative = "cropped, lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, artist name, clothes, pale skin, furry, shiny, teeth, face, looking at viewer"
+    steps = 40
     seed = 1234567890
     width = 512
     height = 512
@@ -110,6 +140,7 @@ def main():
             request = Request(
                 prompt = prompt,
                 prompt_negative = prompt_negative,
+                steps = steps,
                 seed = seed,
                 width = width,
                 height = height,
@@ -118,7 +149,7 @@ def main():
             request = y_modifier(request, y_value)
             request = x_modifier(request, x_value)
 
-            # Dummy variable to fix closure not resetting between iterations
+            # request=request is because loops don't create closures
             cell = ImageCell(request.width, request.height, lambda request=request: request.execute())
             row.append(cell)
 
@@ -136,7 +167,7 @@ def main():
     tiler = Tiler(cells)
     tiler.render(out_file)
 
-def get_modifier(axis_type: Literal['sampler', 'steps', 'cfg', 'resolution']) -> tuple[Callable[[Request, Any], Request], Callable[[Any], str]]:
+def get_modifier(axis_type: str) -> tuple[Callable[[Request, Any], Request], Callable[[Any], str]]:
     """Returns two functions, one that returns the track name, and one that returns a modified request
     
     For example, given axis_type='resolution'...
@@ -145,7 +176,7 @@ def get_modifier(axis_type: Literal['sampler', 'steps', 'cfg', 'resolution']) ->
     """
 
     axis_type = axis_type.lower()
-    VALUE_TYPES = ['sampler', 'steps', 'cfg', 'resolution']
+    VALUE_TYPES = ['sampler', 'steps', 'cfg', 'resolution', 'prompt_full']
     assert axis_type in VALUE_TYPES, f'Invalid axis type: {axis_type}. Must be one of [{", ".join(VALUE_TYPES)}]'
 
     if axis_type == 'sampler':
@@ -172,6 +203,32 @@ def get_modifier(axis_type: Literal['sampler', 'steps', 'cfg', 'resolution']) ->
         def modifier(request: Request, resolution: tuple[int, int]) -> Request:
             request.width = resolution[0]
             request.height = resolution[1]
+            return request
+    elif axis_type == 'prompt_full':
+        def stringify(lst: tuple[str, str]) -> str:
+            def line_break(text: str, width=10) -> str:
+                text = text.strip()
+                if not text:
+                    return ''
+
+                split = text.split()
+                lines = [split[0]]
+
+                for word in split[1:]:
+                    if len(lines[-1]) > width:
+                        lines.append(word)
+                    else:
+                        lines[-1] += " " + word
+                return "\n".join(lines)
+
+            prompt, prompt_negative = lst
+            prompt = line_break(prompt)
+            prompt_negative = line_break(prompt_negative)
+            div = '\n--------\n'
+            return f"POSITIVE{div}{prompt}\n\nNEGATIVE{div}{prompt_negative}\n--------------------"
+        def modifier(request: Request, lst: tuple[str, str]) -> Request:
+            request.prompt = lst[0]
+            request.prompt_negative = lst[1]
             return request
 
     return modifier, stringify

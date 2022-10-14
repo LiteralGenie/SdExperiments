@@ -48,9 +48,10 @@ class Request:
     extras: bool = False
     height: int = 512
     width: int = 512
-    highres_fix = False,
-    scale_latent = False
+    highres_fix = False
     denoising_strength = 0.7
+    first_pass_width = 512
+    first_pass_height = 512
     _rest: list = field(
         default_factory=lambda: [
             "None",
@@ -99,8 +100,9 @@ class Request:
                 self.height,
                 self.width,
                 self.highres_fix,
-                self.scale_latent,
                 self.denoising_strength,
+                self.first_pass_width,
+                self.first_pass_height,
                 *self._rest,
             ],
         )
@@ -109,6 +111,7 @@ class Request:
         # Generate image
         response = requests.post(SD_URL + "/api/predict", json=self.payload)
         response = response.json()
+        assert 'error' not in response, response
 
         # Get image data
         im_b64 = response["data"][0][0].replace("data:image/png;base64,", "")
