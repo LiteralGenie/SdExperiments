@@ -127,6 +127,7 @@ class TextCell(Cell):
         try:
             font = ImageFont.truetype(font_file, font_size)
         except:
+            print(f'Failed to load font {font_file}. Selecting default font.')
             font = ImageFont.load_default()
         
         bbox = ctx.textbbox((0,0), text=text, font=font)

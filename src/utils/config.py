@@ -2,7 +2,6 @@
 SD_URL = "http://localhost:7860"
 
 APP_DEFAULTS = dict(
-    # font = "arial.ttf",
     font = "Pillow/Tests/fonts/FreeMono.ttf",
     font_size = 40,
     font_color = (0,0,0),
