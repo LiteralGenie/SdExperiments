@@ -1,5 +1,6 @@
 import copy
 from ctypes.wintypes import WORD
+import random
 import time
 from typing import Any, Callable, Literal
 
@@ -95,6 +96,11 @@ Examples of things you can copy-paste under x_axis and y_axis:
     "((jpeg artifacts))",
 ]
 
+'seed',
+[
+    123, 4321, 12345, 654321, 1234567, 87654321, 123456789
+]
+
 """
 
 
@@ -102,33 +108,25 @@ def main():
     x_axis = [
         'prompt_positive_partial',
         [
-            "detailed",
-            "((detailed))",
-            "masterpiece",
-            "((masterpiece))",
-            "intricate",
-            "((intricate))",
+            "hair bun, braids",
+            "braids, hair bun",
+            "braided hair bun",
+            "hair with bun and braids",
+            "braids, bun"
         ]
     ]
 
     y_axis = [
-        'prompt_negative',
+        'seed',
         [
-            "normal quality",
-            "((normal quality))",
-            "low quality",
-            "((low quality))",
-            "worst quality",
-            "((worst quality))",
-            "jpeg artifacts",
-            "((jpeg artifacts))",
+            123, 4321, 12345, 654321, 1234567, 87654321, 123456789
         ]
     ]
 
-    prompt = "girl, black hair, ((brown streaks)), white parka, (ripped jeans), standing outside, (smiling), city, portrait"
-    prompt_negative = "cropped, lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, artist name, clothes, pale skin, furry, shiny, teeth, face, looking at viewer"
-    steps = 40
-    seed = 1234567890
+    prompt = "girl, ash blonde, violet eyes, black school uniform"
+    prompt_negative = "worst quality, jpeg artifacts, cropped"
+    steps = 30
+    seed = 1234567
     width = 512
     height = 512
 
@@ -198,7 +196,7 @@ def get_modifier(axis_type: str) -> tuple[Callable[[Request, Any], Request], Cal
     """
 
     axis_type = axis_type.lower()
-    VALUE_TYPES = ['sampler', 'steps', 'cfg', 'resolution', 'prompt_full', 'prompt_positive', 'prompt_negative', 'prompt_positive_partial', 'prompt_negative_partial']
+    VALUE_TYPES = ['sampler', 'steps', 'cfg', 'resolution', 'seed', 'prompt_full', 'prompt_positive', 'prompt_negative', 'prompt_positive_partial', 'prompt_negative_partial']
     assert axis_type in VALUE_TYPES, f'Invalid axis type: {axis_type}. Must be one of [{", ".join(VALUE_TYPES)}]'
 
     if axis_type == 'sampler':
@@ -225,6 +223,12 @@ def get_modifier(axis_type: str) -> tuple[Callable[[Request, Any], Request], Cal
         def modifier(request: Request, resolution: tuple[int, int]) -> Request:
             request.width = resolution[0]
             request.height = resolution[1]
+            return request
+    elif axis_type == 'seed':
+        def stringify(seed: int) -> str:
+            return str(seed)
+        def modifier(request: Request, seed: int) -> Request:
+            request.seed = seed
             return request
     elif axis_type == 'prompt_full':
         def stringify(lst: tuple[str, str]) -> str:

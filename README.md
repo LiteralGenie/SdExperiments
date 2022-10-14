@@ -20,3 +20,6 @@ The resulting image will be located in `outputs/` and will be updated as the scr
 - [ ] Allow resuming of runs
 - [x] Prompt axis
 - [ ] Axis for "high-resolution fix"
+- [ ] Embedded png info
+- [ ] Large cells
+- [ ] Cache
