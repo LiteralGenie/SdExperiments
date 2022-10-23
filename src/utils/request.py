@@ -116,7 +116,9 @@ class Request:
         payload = self.payload
 
         # Check cache
-        if check_cache and (img := self.from_db()):
+        if check_cache and (im_b64 := self.from_db()):
+            im_bytes = BytesIO(base64.b64decode(im_b64))
+            img = PIL.Image.open(im_bytes)
             return img
 
         # Generate image
@@ -153,7 +155,7 @@ class Request:
 
         return img
 
-    def from_db(self):
+    def from_db(self) -> str:
         with DB() as conn:
             db_key = json.dumps(self.payload)
             result = conn.execute(
