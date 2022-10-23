@@ -17,7 +17,7 @@ DB = lambda: sqlite3.connect(paths.DATA_DIR / "im_cache.sqlite")
 
 @dataclass
 class Request:
-    fn_index: int = 14
+    fn_index: int = 13
     session_hash: str = "czvtj8n71w"
 
     prompt: str = ""
@@ -59,14 +59,6 @@ class Request:
     first_pass_height = 0
     _rest: list = field(
         default_factory=lambda: [
-            "0.00001",
-            0.9,
-            5,
-            "None",
-            False,
-            "",
-            0.1,
-            False,
             "None",
             False,
             False,
