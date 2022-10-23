@@ -1,6 +1,8 @@
 import base64
 from dataclasses import dataclass, field
 from io import BytesIO
+import json
+import sqlite3
 from typing import Literal
 from PIL.Image import Image
 import PIL.Image
@@ -8,11 +10,14 @@ import PIL.Image
 import requests
 
 from utils.config import SD_URL
+from utils import paths
+
+DB = lambda: sqlite3.connect(paths.DATA_DIR / "im_cache.sqlite")
 
 
 @dataclass
 class Request:
-    fn_index: int = 13
+    fn_index: int = 14
     session_hash: str = "czvtj8n71w"
 
     prompt: str = ""
@@ -50,10 +55,18 @@ class Request:
     width: int = 512
     highres_fix = False
     denoising_strength = 0.7
-    first_pass_width = 512
-    first_pass_height = 512
+    first_pass_width = 0
+    first_pass_height = 0
     _rest: list = field(
         default_factory=lambda: [
+            "0.00001",
+            0.9,
+            5,
+            "None",
+            False,
+            "",
+            0.1,
+            False,
             "None",
             False,
             False,
@@ -107,17 +120,59 @@ class Request:
             ],
         )
 
-    def execute(self) -> Image:
+    def execute(self, check_cache=True) -> Image:
+        payload = self.payload
+
+        # Check cache
+        if check_cache and (img := self.from_db()):
+            return img
+
         # Generate image
-        response = requests.post(SD_URL + "/api/predict", json=self.payload)
+        response = requests.post(SD_URL + "/api/predict", json=payload)
         response = response.json()
-        assert 'error' not in response, response
+        assert "error" not in response, dict(request=payload, response=response)
 
         # Get image data
-        im_b64 = response["data"][0][0].replace("data:image/png;base64,", "")
-        im_bytes = BytesIO(base64.b64decode(im_b64))
-        im = PIL.Image.open(im_bytes)
-        return im
+        data = response["data"][0][0]
+        if isinstance(data, str):
+            im_b64 = data.replace("data:image/png;base64,", "")
+            im_bytes = BytesIO(base64.b64decode(im_b64))
+            img = PIL.Image.open(im_bytes)
+        else:
+            im_b64 = None
+            img = PIL.Image.open(data["name"])
+
+        # Update cache
+        if im_b64 is None:
+            im_bytes = BytesIO()
+            img.save(im_bytes, format="PNG")
+            im_b64 = base64.b64encode(im_bytes.getvalue()).decode("utf-8")
+
+        with DB() as conn:
+            db_key = json.dumps(self.payload)
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO im_cache VALUES (
+                    ?, ?
+                )
+            """,
+                (db_key, im_b64),
+            )
+
+        return img
+
+    def from_db(self):
+        with DB() as conn:
+            db_key = json.dumps(self.payload)
+            result = conn.execute(
+                """
+                SELECT data FROM im_cache
+                WHERE id = ?
+            """,
+                (db_key,),
+            ).fetchone()
+
+        return result[0] if result else None
 
     def validate(self) -> None:
         assert self.sampler in [
@@ -134,7 +189,18 @@ class Request:
             "DPM2 a Karras",
             "DDIM",
             "PLMS",
-        ], f'Invalid sampler: {self.sampler}'
+        ], f"Invalid sampler: {self.sampler}"
 
     def __post_init__(self):
         self.validate()
+
+        with DB() as conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS im_cache (
+                    id      TEXT        NOT NULL,
+                    data    TEXT        NOT NULL,        --base64 image data
+                    PRIMARY KEY (id)
+                )
+            """
+            )
