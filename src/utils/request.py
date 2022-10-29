@@ -17,7 +17,7 @@ DB = lambda: sqlite3.connect(paths.DATA_DIR / "im_cache.sqlite")
 
 @dataclass
 class Request:
-    fn_index: int = 13
+    fn_index: int = 50
     session_hash: str = "czvtj8n71w"
 
     prompt: str = ""
