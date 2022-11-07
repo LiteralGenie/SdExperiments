@@ -1,5 +1,6 @@
 import base64
 from dataclasses import dataclass, field
+import dataclasses
 from io import BytesIO
 import json
 import sqlite3
@@ -11,6 +12,9 @@ import requests
 
 from utils.config import SD_URL
 from utils import paths
+from loguru import logger
+
+logger.add(paths.DATA_DIR / "logs" / "generate.log")
 
 DB = lambda: sqlite3.connect(paths.DATA_DIR / "im_cache.sqlite")
 
@@ -122,6 +126,7 @@ class Request:
             return img
 
         # Generate image
+        logger.debug(dataclasses.asdict(self))
         response = requests.post(SD_URL + "/api/predict", json=payload)
         response = response.json()
         assert "error" not in response, dict(request=payload, response=response)
@@ -155,7 +160,7 @@ class Request:
 
         return img
 
-    def from_db(self) -> str:
+    def from_db(self) -> str | None:
         with DB() as conn:
             db_key = json.dumps(self.payload)
             result = conn.execute(

@@ -103,20 +103,23 @@ Examples of things you can copy-paste under x_axis and y_axis:
 
 def main():
     x_axis = [
-        "prompt_positive_partial",
+        "steps",
+        [10, 20, 30, 40, 50, 60, 80, 100, 120, 140],
+    ]
+
+    y_axis = [
+        "seed",
         [
-            "hair bun, braids",
-            "braids, hair bun",
-            "braided hair bun",
-            "hair with bun and braids",
-            "braids, bun",
+            123,
+            4321,
+            # 6789, 9876,
+            654321,
+            # 1234567, 87654321, 123456789
         ],
     ]
 
-    y_axis = ["cfg", [123, 4321, 12345, 654321, 1234567, 87654321, 123456789]]
-
-    prompt = "girl, ash blonde, violet eyes, black school uniform"
-    prompt_negative = "worst quality, jpeg artifacts, cropped"
+    prompt = ""
+    prompt_negative = ""
     steps = 30
     seed = 1234567
     width = 512
