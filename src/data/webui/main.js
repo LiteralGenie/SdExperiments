@@ -1224,11 +1224,20 @@ __webpack_require__.r(__webpack_exports__);
 class GridSettingsService {
     constructor() {
         this.reload$ = new rxjs__WEBPACK_IMPORTED_MODULE_1__.Subject();
-        this.gridForm = {
-            baseParams: _types__WEBPACK_IMPORTED_MODULE_0__.DEFAULT_PARAMS,
-            axisOptions: _types__WEBPACK_IMPORTED_MODULE_0__.DEFAULT_AXIS_OPTIONS,
-            activeAxis: { x: 'size', y: 'seed' },
-        };
+        const savedGrid = window.localStorage.getItem('gridForm');
+        if (savedGrid) {
+            this.gridForm = JSON.parse(savedGrid);
+        }
+        else {
+            this.gridForm = {
+                baseParams: _types__WEBPACK_IMPORTED_MODULE_0__.DEFAULT_PARAMS,
+                axisOptions: _types__WEBPACK_IMPORTED_MODULE_0__.DEFAULT_AXIS_OPTIONS,
+                activeAxis: { x: 'size', y: 'seed' },
+            };
+        }
+        this.reload$.subscribe(() => {
+            window.localStorage.setItem('gridForm', JSON.stringify(this.gridForm));
+        });
     }
 }
 GridSettingsService.ɵfac = function GridSettingsService_Factory(t) { return new (t || GridSettingsService)(); };
@@ -1576,10 +1585,10 @@ class GridViewComponent {
           x: gridWidth * tfm.k,
           y: gridHeight * tfm.k
         };
-        const minX = -realSize.x * 0.8;
-        const maxX = vpWidth * 0.8;
-        const minY = -realSize.y * 0.8;
-        const maxY = vpHeight * 0.8;
+        const minX = -realSize.x * 0.995;
+        const maxX = vpWidth * 0.995;
+        const minY = -realSize.y * 0.995;
+        const maxY = vpHeight * 0.995;
         const {
           x,
           y
