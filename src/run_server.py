@@ -30,7 +30,7 @@ async def generate(data: dict):
         if not result:
             return None
     else:
-        request.execute()
+        request.execute(check_cache=False)
         result = request.from_db()
         if not result:
             return HTTPException(500, "Image generation failed")
